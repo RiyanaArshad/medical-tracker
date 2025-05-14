@@ -1,0 +1,242 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}My Appointments - Medical History & Medication Tracker{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1>My Appointments</h1>
+        <p class="text-muted">Manage your scheduled appointments</p>
+    </div>
+    
+    {% if user.is_patient %}
+    <div>
+        <a href="{% url 'appointment_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Request New Appointment
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <ul class="nav nav-tabs card-header-tabs" id="appointment-tabs">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="upcoming-tab" data-bs-toggle="tab" href="#upcoming-appointments">
+                            <i class="fas fa-calendar-alt me-2 text-primary"></i>Upcoming
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="pending-tab" data-bs-toggle="tab" href="#pending-appointments">
+                            <i class="fas fa-clock me-2 text-warning"></i>Pending
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="past-tab" data-bs-toggle="tab" href="#past-appointments">
+                            <i class="fas fa-history me-2 text-secondary"></i>Past
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content" id="appointment-tab-content">
+                    <!-- Upcoming Appointments Tab -->
+                    <div class="tab-pane fade show active" id="upcoming-appointments">
+                        {% if upcoming_appointments %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Date & Time</th>
+                                            <th>{% if user.is_patient %}Doctor{% else %}Patient{% endif %}</th>
+                                            <th>Purpose</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for appointment in upcoming_appointments %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ appointment.appointment_date|date:"M d, Y" }}</strong><br>
+                                                <span class="text-muted">{{ appointment.appointment_time }}</span>
+                                            </td>
+                                            <td>
+                                                {% if user.is_patient %}
+                                                    {{ appointment.doctor.get_full_name|default:appointment.doctor.username }}
+                                                {% else %}
+                                                    {{ appointment.patient.get_full_name|default:appointment.patient.username }}
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ appointment.purpose }}</td>
+                                            <td>
+                                                <span class="badge bg-success">Confirmed</span>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <a href="{% url 'appointment_detail' appointment.id %}" class="btn btn-outline-primary">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    {% if user.is_patient %}
+                                                    <a href="{% url 'appointment_cancel' appointment.id %}" class="btn btn-outline-danger" onclick="return confirm('Are you sure you want to cancel this appointment?');">
+                                                        <i class="fas fa-times"></i>
+                                                    </a>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-calendar-alt fa-3x text-muted mb-3"></i>
+                                <h5>No Upcoming Appointments</h5>
+                                <p class="text-muted">You don't have any confirmed appointments scheduled.</p>
+                                {% if user.is_patient %}
+                                <a href="{% url 'appointment_request' %}" class="btn btn-primary mt-2">
+                                    <i class="fas fa-plus me-2"></i>Request New Appointment
+                                </a>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Pending Appointments Tab -->
+                    <div class="tab-pane fade" id="pending-appointments">
+                        {% if pending_appointments %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Date & Time</th>
+                                            <th>{% if user.is_patient %}Doctor{% else %}Patient{% endif %}</th>
+                                            <th>Purpose</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for appointment in pending_appointments %}
+                                        <tr>
+                                            <td>
+                                                <strong>{{ appointment.appointment_date|date:"M d, Y" }}</strong><br>
+                                                <span class="text-muted">{{ appointment.appointment_time }}</span>
+                                            </td>
+                                            <td>
+                                                {% if user.is_patient %}
+                                                    {{ appointment.doctor.get_full_name|default:appointment.doctor.username }}
+                                                {% else %}
+                                                    {{ appointment.patient.get_full_name|default:appointment.patient.username }}
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ appointment.purpose }}</td>
+                                            <td>
+                                                <span class="badge bg-warning text-dark">Pending</span>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <a href="{% url 'appointment_detail' appointment.id %}" class="btn btn-outline-primary" title="View Details">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    {% if appointment.status == 'pending' or appointment.status == 'approved' %}
+                                                        {% if user.is_patient and appointment.status == 'pending' %}
+                                                        <a href="{% url 'appointment_update' appointment.id %}" class="btn btn-outline-secondary" title="Edit Appointment">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                        {% endif %}
+                                                        <a href="{% url 'appointment_cancel' appointment.id %}" class="btn btn-outline-danger" title="Cancel Appointment">
+                                                            <i class="fas fa-times"></i>
+                                                        </a>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-clock fa-3x text-muted mb-3"></i>
+                                <h5>No Pending Appointments</h5>
+                                <p class="text-muted">You don't have any appointment requests waiting for confirmation.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Past Appointments Tab -->
+                    <div class="tab-pane fade" id="past-appointments">
+                        {% if past_appointments %}
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Date & Time</th>
+                                            <th>{% if user.is_patient %}Doctor{% else %}Patient{% endif %}</th>
+                                            <th>Purpose</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for appointment in past_appointments %}
+                                        <tr class="table-light">
+                                            <td>
+                                                <strong>{{ appointment.appointment_date|date:"M d, Y" }}</strong><br>
+                                                <span class="text-muted">{{ appointment.appointment_time }}</span>
+                                            </td>
+                                            <td>
+                                                {% if user.is_patient %}
+                                                    {{ appointment.doctor.get_full_name|default:appointment.doctor.username }}
+                                                {% else %}
+                                                    {{ appointment.patient.get_full_name|default:appointment.patient.username }}
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ appointment.purpose }}</td>
+                                            <td>
+                                                {% if appointment.status == 'cancelled' %}
+                                                    <span class="badge bg-danger">Cancelled</span>
+                                                {% elif appointment.status == 'completed' %}
+                                                    <span class="badge bg-info">Completed</span>
+                                                {% else %}
+                                                    <span class="badge bg-secondary">Past</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="{% url 'appointment_detail' appointment.id %}" class="btn btn-sm btn-outline-secondary">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                                <h5>No Past Appointments</h5>
+                                <p class="text-muted">You don't have any past appointments in your history.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

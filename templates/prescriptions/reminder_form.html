@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}{% if reminder %}Edit{% else %}Add{% endif %} Medication Reminder - Medical History & Medication Tracker{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <a href="{% url 'prescription_detail' prescription.id %}" class="btn btn-outline-secondary mb-2">
+            <i class="fas fa-arrow-left me-2"></i>Back to Prescription
+        </a>
+        <h1>{% if reminder %}Edit{% else %}Add{% endif %} Medication Reminder</h1>
+        <p class="text-muted">For {{ prescription.medication }}</p>
+    </div>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">
+                    <i class="fas fa-bell me-2"></i>
+                    {% if reminder %}Edit Reminder Details{% else %}New Medication Reminder{% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.reminder_time.id_for_label }}" class="form-label">{{ form.reminder_time.label }} (e.g., Morning, Noon, Afternoon, Evening, Night)</label>
+                            {% if form.reminder_time.errors %}
+                                {% render_field form.reminder_time class="form-select is-invalid" %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.reminder_time.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {% render_field form.reminder_time class="form-select" %}
+                            {% endif %}
+                            {% if form.reminder_time.help_text %}
+                                <div class="form-text">{{ form.reminder_time.help_text }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.repeat.id_for_label }}" class="form-label">{{ form.repeat.label }}</label>
+                            {% if form.repeat.errors %}
+                                {% render_field form.repeat class="form-select is-invalid" %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.repeat.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {% render_field form.repeat class="form-select" %}
+                            {% endif %}
+                            {% if form.repeat.help_text %}
+                                <div class="form-text">{{ form.repeat.help_text }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.note.id_for_label }}" class="form-label">{{ form.note.label }}</label>
+                        {% if form.note.errors %}
+                            {% render_field form.note class="form-control is-invalid" rows=3 %}
+                            <div class="invalid-feedback">
+                                {% for error in form.note.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {% render_field form.note class="form-control" rows=3 %}
+                        {% endif %}
+                        {% if form.note.help_text %}
+                            <div class="form-text">{{ form.note.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+    {% if form.is_active.errors %}
+        {% render_field form.is_active class="form-check-input is-invalid" %}
+        <div class="invalid-feedback">
+            {% for error in form.is_active.errors %}
+                {{ error }}
+            {% endfor %}
+        </div>
+    {% else %}
+        {% render_field form.is_active class="form-check-input" %}
+    {% endif %}
+    <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+        {{ form.is_active.label }}
+    </label>
+    {% if form.is_active.help_text %}
+        <div class="form-text">{{ form.is_active.help_text }}</div>
+    {% endif %}
+</div>
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'prescription_detail' prescription.id %}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>{% if reminder %}Update{% else %}Save{% endif %} Reminder
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="fas fa-prescription me-2"></i>Medication Information</h5>
+            </div>
+            <div class="card-body">
+                <h6 class="font-weight-bold">{{ prescription.medication }}</h6>
+                <p class="mb-1"><strong>Dosage:</strong> {{ prescription.dosage }}</p>
+                <p class="mb-1"><strong>Frequency:</strong> {{ prescription.frequency }}</p>
+                <p class="mb-3"><strong>Instructions:</strong> {{ prescription.instructions|default:"No specific instructions." }}</p>
+                
+                <hr>
+                
+                <p class="mb-2"><strong>Start Date:</strong> {{ prescription.start_date }}</p>
+                <p class="mb-0"><strong>End Date:</strong> {{ prescription.end_date|default:"Ongoing" }}</p>
+            </div>
+        </div>
+        
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Reminder Tips</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        Set reminders for each dose of medication
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        Choose times when you're likely to be available
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        Add notes for specific instructions (e.g., "Take with food")
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        Set multiple reminders for medications taken several times a day
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        Disable reminders temporarily if needed, rather than deleting them
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

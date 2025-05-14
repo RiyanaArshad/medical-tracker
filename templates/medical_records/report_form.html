@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}{% if reminder %}Edit Report{% else %}Upload Medical Report{% endif %} - Medical History & Medication Tracker{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <a href="{% url 'medical_record_detail' record.id %}" class="btn btn-outline-secondary mb-2">
+            <i class="fas fa-arrow-left me-2"></i>Back to Record
+        </a>
+        <h1>{% if reminder %}Edit{% else %}Upload{% endif %} Medical Report</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">
+                    <i class="fas fa-{% if reminder %}edit{% else %}upload{% endif %} me-2"></i>
+                    {% if reminder %}Edit Report Details{% else %}New Medical Report{% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    {% for field in form %}
+                        <div class="mb-3">
+                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                            {% if field.errors %}
+                                {% if field.name == 'report_file' %}
+                                    {% render_field field class="form-control is-invalid" %}
+                                {% else %}
+                                    {% render_field field class="form-control is-invalid" %}
+                                {% endif %}
+                                <div class="invalid-feedback">
+                                    {% for error in field.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {% if field.name == 'report_file' %}
+                                    {% render_field field class="form-control" %}
+                                {% else %}
+                                    {% render_field field class="form-control" %}
+                                {% endif %}
+                            {% endif %}
+                            {% if field.help_text %}
+                                <div class="form-text">{{ field.help_text }}</div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'medical_record_detail' record.id %}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>{% if reminder %}Update{% else %}Upload{% endif %} Report
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Information</h5>
+            </div>
+            <div class="card-body">
+                <h6 class="font-weight-bold">Patient: {{ record.patient.get_full_name|default:record.patient.username }}</h6>
+                <p class="text-muted">Diagnosis: {{ record.diagnosis }}</p>
+                
+                <hr>
+                
+                <h6 class="mb-3">Tips for uploading medical reports:</h6>
+                <ul class="mb-0">
+                    <li class="mb-2">Ensure files are clear and legible</li>
+                    <li class="mb-2">Acceptable formats include PDF, JPEG, and PNG</li>
+                    <li class="mb-2">Maximum file size is 5MB</li>
+                    <li class="mb-2">Use descriptive titles for easy reference</li>
+                    <li class="mb-2">Include the date when the test/report was conducted</li>
+                    <li class="mb-2">Add notes if there are specific details to highlight</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="fas fa-file-medical-alt me-2"></i>Report Types</h5>
+            </div>
+            <div class="card-body">
+                <p>Common medical report types include:</p>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">Blood Test</li>
+                    <li class="list-group-item">X-Ray</li>
+                    <li class="list-group-item">MRI Scan</li>
+                    <li class="list-group-item">CT Scan</li>
+                    <li class="list-group-item">Ultrasound</li>
+                    <li class="list-group-item">ECG/EKG</li>
+                    <li class="list-group-item">Biopsy Result</li>
+                    <li class="list-group-item">Pathology Report</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

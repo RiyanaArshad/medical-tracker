@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}Medical Records - Medical History & Medication Tracker{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Medical Records</h1>
+    {% if user.profile.is_doctor %}
+    <a href="{% url 'medical_record_create' %}" class="btn btn-primary">
+        <i class="fas fa-plus-circle me-2"></i>Add New Record
+    </a>
+    {% endif %}
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div class="card shadow-sm">
+    <div class="card-header bg-light">
+        <div class="row align-items-center">
+            <div class="col">
+                <h5 class="mb-0">
+                    <i class="fas fa-clipboard-list me-2"></i>Your Medical History
+                </h5>
+            </div>
+            <div class="col-auto">
+                <span class="badge bg-primary">{{ records|length }} Records</span>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        {% if records %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Date</th>
+                            <th>Patient</th>
+                            <th>Doctor</th>
+                            <th>Diagnosis</th>
+                            <th>Files</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in records %}
+                            <tr>
+                                <td>{{ record.date_created|date:"M d, Y" }}</td>
+                                <td>{{ record.patient.get_full_name|default:record.patient.username }}</td>
+                                <td>
+                                    {% if record.doctor %}
+                                        Dr. {{ record.doctor.get_full_name|default:record.doctor.username }}
+                                    {% else %}
+                                        Not assigned
+                                    {% endif %}
+                                </td>
+                                <td>{{ record.diagnosis }}</td>
+                                <td>
+                                    <span class="badge bg-info">{{ record.reports.count }} Files</span>
+                                </td>
+                                <td>
+                                    <a href="{% url 'medical_record_detail' record.id %}" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-eye me-1"></i>View
+                                    </a>
+                                    {% if user.profile.is_doctor and record.doctor == user or user.profile.is_admin %}
+                                        <a href="{% url 'medical_record_update' record.id %}" class="btn btn-sm btn-secondary">
+                                            <i class="fas fa-edit me-1"></i>Edit
+                                        </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-4">
+                <i class="fas fa-file-medical fa-4x text-muted mb-3"></i>
+                <p class="lead">No medical records found.</p>
+                {% if user.profile.is_patient %}
+                    <p>Your medical history will appear here once your doctor adds records.</p>
+                {% elif user.profile.is_doctor %}
+                    <a href="{% url 'medical_record_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus-circle me-2"></i>Create First Record
+                    </a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 

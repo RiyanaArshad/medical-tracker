@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+
+{% block title %}Doctor Dashboard - Medical History & Medication Tracker{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="mb-3">Doctor Dashboard</h1>
+            <p class="lead">Welcome, Dr. {{ user.get_full_name|default:user.username }}! Manage patient records, prescriptions, and appointments.</p>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="card bg-light h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-file-medical fa-3x text-primary mb-3"></i>
+                    <h5>Patient Records</h5>
+                    <h2>{{ patient_records.count|default:"0" }}</h2>
+                    <a href="{% url 'medical_record_list' %}" class="btn btn-sm btn-outline-primary mt-2">View All Records</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card bg-light h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-calendar-check fa-3x text-warning mb-3"></i>
+                    <h5>Pending Appointments</h5>
+                    <h2>{{ pending_appointments_count|default:"0" }}</h2>
+                    <a href="{% url 'appointment_list' %}" class="btn btn-sm btn-outline-warning mt-2">View All Appointments</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card bg-light h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-prescription fa-3x text-danger mb-3"></i>
+                    <h5>Prescriptions Written</h5>
+                    <h2>{{ user.doctor_prescriptions.count|default:"0" }}</h2>
+                    <a href="{% url 'prescription_list' %}" class="btn btn-sm btn-outline-danger mt-2">View All Prescriptions</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Today's Appointments</h5>
+                    <a href="{% url 'appointment_list' %}" class="btn btn-sm btn-light">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if todays_appointments %}
+                    <div class="list-group">
+                        {% for appointment in todays_appointments %}
+                        <div class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ appointment.patient.get_full_name|default:appointment.patient.username }}</h6>
+                                <small>{{ appointment.appointment_time|time:"g:i A" }}</small>
+                            </div>
+                            <p class="mb-1">{{ appointment.reason|truncatechars:50 }}</p>
+                            <div class="d-flex justify-content-between align-items-center mt-2">
+                                <span class="badge {% if appointment.status == 'pending' %}bg-warning{% elif appointment.status == 'approved' %}bg-success{% elif appointment.status == 'cancelled' %}bg-danger{% else %}bg-info{% endif %}">
+                                    {{ appointment.get_status_display }}
+                                </span>
+                                <div>
+                                    <a href="{% url 'appointment_detail' appointment.id %}" class="btn btn-sm btn-primary">Details</a>
+                                    {% if appointment.status == 'pending' %}
+                                    <a href="{% url 'appointment_status_update' appointment.id %}" class="btn btn-sm btn-success">Approve</a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-calendar-day fa-4x text-muted mb-3"></i>
+                        <p class="text-muted">No appointments scheduled for today.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-hourglass-half me-2"></i>Pending Appointments</h5>
+                    <div>
+                        <a href="{% url 'appointment_list' %}" class="btn btn-sm btn-dark">View All</a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if pending_appointments %}
+                    <div class="list-group">
+                        {% for appointment in pending_appointments %}
+                        <div class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ appointment.patient.get_full_name|default:appointment.patient.username }}</h6>
+                                <small>{{ appointment.appointment_date|date:"M d, Y" }} at {{ appointment.appointment_time|time:"g:i A" }}</small>
+                            </div>
+                            <p class="mb-1">{{ appointment.reason|truncatechars:50 }}</p>
+                            <div class="d-flex justify-content-end mt-2">
+                                <a href="{% url 'appointment_detail' appointment.id %}" class="btn btn-sm btn-primary me-2">Details</a>
+                                <a href="{% url 'appointment_status_update' appointment.id %}" class="btn btn-sm btn-success">Approve</a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-check-circle fa-4x text-muted mb-3"></i>
+                        <p class="text-muted">No pending appointments to review.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-file-medical-alt me-2"></i>Recent Patient Records</h5>
+                    <div>
+                        <a href="{% url 'medical_record_create' %}" class="btn btn-sm btn-success me-2">Add New Record</a>
+                        <a href="{% url 'medical_record_list' %}" class="btn btn-sm btn-light">View All</a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if patient_records %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Patient</th>
+                                    <th>Diagnosis</th>
+                                    <th>Date</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in patient_records %}
+                                <tr>
+                                    <td>{{ record.patient.get_full_name|default:record.patient.username }}</td>
+                                    <td>{{ record.diagnosis }}</td>
+                                    <td>{{ record.date_created|date:"M d, Y" }}</td>
+                                    <td>
+                                        <a href="{% url 'medical_record_detail' record.id %}" class="btn btn-sm btn-primary">View</a>
+                                        <a href="{% url 'medical_record_update' record.id %}" class="btn btn-sm btn-secondary">Edit</a>
+                                        <a href="{% url 'prescription_create' %}?patient={{ record.patient.id }}" class="btn btn-sm btn-danger">Prescribe</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-file-medical fa-4x text-muted mb-3"></i>
+                        <p class="text-muted">No patient records found.</p>
+                        <a href="{% url 'medical_record_create' %}" class="btn btn-primary">Create New Record</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

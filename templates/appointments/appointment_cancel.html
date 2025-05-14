@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Cancel Appointment - Medical History & Medication Tracker{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Cancel Appointment
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <h5><i class="fas fa-exclamation-circle me-2"></i>Are you sure?</h5>
+                        <p class="mb-0">You are about to cancel the following appointment:</p>
+                    </div>
+
+                    <dl class="row mt-4">
+                        <dt class="col-sm-4">Date:</dt>
+                        <dd class="col-sm-8">{{ appointment.appointment_date|date:"F d, Y" }}</dd>
+
+                        <dt class="col-sm-4">Time:</dt>
+                        <dd class="col-sm-8">{{ appointment.appointment_time }}</dd>
+
+                        <dt class="col-sm-4">{% if user.is_patient %}Doctor:{% else %}Patient:{% endif %}</dt>
+                        <dd class="col-sm-8">
+                            {% if user.is_patient %}
+                                {{ appointment.doctor.get_full_name|default:appointment.doctor.username }}
+                            {% else %}
+                                {{ appointment.patient.get_full_name|default:appointment.patient.username }}
+                            {% endif %}
+                        </dd>
+
+                        <dt class="col-sm-4">Reason:</dt>
+                        <dd class="col-sm-8">{{ appointment.reason }}</dd>
+                    </dl>
+
+                    <hr>
+
+                    <form method="post" class="mt-4">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'appointment_detail' appointment.id %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>No, Keep Appointment
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-check me-2"></i>Yes, Cancel Appointment
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

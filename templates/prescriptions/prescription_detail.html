@@ -1,0 +1,260 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}{{ prescription.medication_name }} - Prescription Details - Medical History & Medication Tracker{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <a href="{% url 'medical_record_detail' prescription.medical_record.id %}" class="btn btn-outline-secondary mb-2">
+            <i class="fas fa-arrow-left me-2"></i>Back to Medical Record
+        </a>
+        <h1 class="mb-1">Prescription: {{ prescription.medication_name }}</h1>
+        <p class="text-muted">For {{ prescription.medical_record.patient.get_full_name|default:prescription.medical_record.patient.username }}</p>
+    </div>
+    
+    {% if user.is_doctor or user.is_staff %}
+    <div>
+        <a href="{% url 'prescription_update' prescription.id %}" class="btn btn-outline-primary me-2">
+            <i class="fas fa-edit me-2"></i>Edit Prescription
+        </a>
+        <a href="{% url 'prescription_toggle_status' prescription.id %}" class="btn btn-{% if prescription.is_active %}danger{% else %}success{% endif %}">
+            <i class="fas fa-{% if prescription.is_active %}ban{% else %}check{% endif %} me-2"></i>Mark as {% if prescription.is_active %}Inactive{% else %}Active{% endif %}
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-prescription me-2"></i>Prescription Details</h5>
+                <span class="badge bg-{% if prescription.is_active %}success{% else %}danger{% endif %} rounded-pill">
+                    {% if prescription.is_active %}Active{% else %}Inactive{% endif %}
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p class="fw-bold mb-1">Medication</p>
+                        <p>{{ prescription.medication_name }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="fw-bold mb-1">Dosage</p>
+                        <p>{{ prescription.dosage }}</p>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p class="fw-bold mb-1">Frequency</p>
+                        <p>{{ prescription.frequency }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="fw-bold mb-1">Duration</p>
+                        <p>{% if prescription.duration %}{{ prescription.duration }} days{% else %}Ongoing{% endif %}</p>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p class="fw-bold mb-1">Start Date</p>
+                        <p>{{ prescription.start_date }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="fw-bold mb-1">End Date</p>
+                        <p>{{ prescription.end_date|default:"Ongoing" }}</p>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <p class="fw-bold mb-1">Instructions</p>
+                        <p>{{ prescription.instructions|default:"No specific instructions provided." }}</p>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="fw-bold mb-1">Prescribed By</p>
+                        <p>{{ prescription.doctor.get_full_name|default:prescription.doctor.username }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="fw-bold mb-1">Date Prescribed</p>
+                        <p>{{ prescription.date_prescribed }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {% if user.is_patient and prescription.is_active %}
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="fas fa-bell me-2"></i>Set Reminders</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-3">Set up reminders to help you stay on track with your medication schedule.</p>
+                
+                <form method="post" action="{% url 'reminder_create' prescription.id %}">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="mb-3">
+                                <label for="reminder_time" class="form-label">Reminder Time</label>
+                                <input type="time" class="form-control" id="reminder_time" name="reminder_time" required>
+                            </div>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="mb-3">
+                                <label for="repeat" class="form-label">Repeat</label>
+                                <select class="form-select" id="repeat" name="repeat">
+                                    <option value="daily">Daily</option>
+                                    <option value="weekly">Weekly</option>
+                                    <option value="monthly">Monthly</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <div class="mb-3">
+                                <button type="submit" class="btn btn-primary w-100">Add</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                
+                <hr>
+                
+                <h6 class="mb-3">Current Reminders</h6>
+                {% if prescription.reminders.all %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for reminder in prescription.reminders.all %}
+                                <tr>
+                                    <td>{{ reminder.reminder_time|time:'g:i A' }}</td>
+                                    <td>
+                                        {% if reminder.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'reminder_delete' reminder.id %}" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No reminders set for this medication.</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Medical Record Info</h5>
+            </div>
+            <div class="card-body">
+                <h6 class="font-weight-bold">{{ prescription.medical_record.diagnosis }}</h6>
+                <p class="mb-1"><strong>Patient:</strong> {{ prescription.medical_record.patient.get_full_name|default:prescription.medical_record.patient.username }}</p>
+                <p class="mb-1"><strong>Doctor:</strong> {{ prescription.medical_record.doctor.get_full_name|default:prescription.medical_record.doctor.username }}</p>
+                <p class="mb-3"><strong>Record created:</strong> {{ prescription.medical_record.created_at }}</p>
+                
+                <hr>
+                
+                <a href="{% url 'medical_record_detail' prescription.medical_record.id %}" class="btn btn-outline-primary btn-sm d-block">
+                    <i class="fas fa-clipboard-list me-2"></i>View Complete Record
+                </a>
+            </div>
+        </div>
+        
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="fas fa-history me-2"></i>Prescription History</h5>
+            </div>
+            <div class="card-body px-0 py-2">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-3 py-3">
+                        <div>
+                            <i class="fas fa-prescription text-primary me-2"></i>
+                            <span>Prescription Created</span>
+                            <p class="text-muted small mb-0">By {{ prescription.doctor.get_full_name|default:prescription.doctor.username }}</p>
+                        </div>
+                        <small class="text-muted">{{ prescription.date_prescribed }}</small>
+                    </li>
+                    {% if prescription.created_at != prescription.updated_at %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-3 py-3">
+                        <div>
+                            <i class="fas fa-edit text-info me-2"></i>
+                            <span>Prescription Updated</span>
+                            <p class="text-muted small mb-0">Last modification</p>
+                        </div>
+                        <small class="text-muted">{{ prescription.updated_at }}</small>
+                    </li>
+                    {% endif %}
+                    {% if prescription.status_changes.all %}
+                        {% for change in prescription.status_changes.all %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-3 py-3">
+                            <div>
+                                <i class="fas fa-{% if change.is_active %}check{% else %}ban{% endif %} text-{% if change.is_active %}success{% else %}danger{% endif %} me-2"></i>
+                                <span>Status Changed to {% if change.is_active %}Active{% else %}Inactive{% endif %}</span>
+                                <p class="text-muted small mb-0">By {{ change.changed_by.get_full_name|default:change.changed_by.username }}</p>
+                            </div>
+                            <small class="text-muted">{{ change.changed_at }}</small>
+                        </li>
+                        {% endfor %}
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+        
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Medication Information</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-3">For detailed information about {{ prescription.medication_name }}, including side effects, interactions, and usage guidelines, consult reliable sources such as:</p>
+                <div class="d-grid gap-2">
+                    <a href="https://www.drugs.com/search.php?searchterm={{ prescription.medication|urlencode }}" class="btn btn-outline-primary btn-sm" target="_blank">
+                        <i class="fas fa-external-link-alt me-2"></i>Drugs.com
+                    </a>
+                    <a href="https://medlineplus.gov/druginfo/meds/{{ prescription.medication|lower|urlencode }}.html" class="btn btn-outline-primary btn-sm" target="_blank">
+                        <i class="fas fa-external-link-alt me-2"></i>MedlinePlus
+                    </a>
+                </div>
+                <div class="alert alert-warning mt-3 mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Always consult your healthcare provider before making any changes to your medication regimen.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

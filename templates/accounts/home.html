@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - Medical History & Medication Tracker{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <h1 class="display-4 mb-4">Medical History & Medication Tracker</h1>
+        <p class="lead">Your comprehensive health management solution that connects patients, doctors, and administrators.</p>
+        <hr class="my-4">
+        <p>Store and manage your medical records, track prescriptions, and book appointments with doctors all in one place.</p>
+        
+        {% if not user.is_authenticated %}
+            <div class="mt-4">
+                <a href="{% url 'register_choice' %}" class="btn btn-primary me-2">Sign Up</a>
+                <a href="{% url 'login' %}" class="btn btn-outline-secondary">Login</a>
+            </div>
+        {% else %}
+            <div class="mt-4">
+                <a href="{% url 'dashboard' %}" class="btn btn-success">Go to Dashboard</a>
+            </div>
+        {% endif %}
+    </div>
+    <div class="col-md-6">
+        <img src="https://images.unsplash.com/photo-1576091160550-2173dba999ef?ixlib=rb-1.2.1&auto=format&fit=crop&w=1050&q=80" class="img-fluid rounded shadow" alt="Medical records">
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-user-md fa-3x mb-3 text-primary"></i>
+                <h3>For Patients</h3>
+                <p>View your medical history, track prescriptions, and book appointments with doctors. Get medication reminders and upload medical reports.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-stethoscope fa-3x mb-3 text-success"></i>
+                <h3>For Doctors</h3>
+                <p>Access patient records, approve or reschedule appointments, and update treatment progress. Generate prescriptions and add treatment notes.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-hospital-user fa-3x mb-3 text-danger"></i>
+                <h3>For Admins</h3>
+                <p>Manage user registrations, doctor approvals, and system logs. Track appointment trends, medication prescriptions, and patient demographics.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5 mb-5">
+    <div class="col-12 text-center">
+        <h2 class="mb-4">Features</h2>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-clipboard-list fa-2x mb-3 text-info"></i>
+                <h4>Medical Records</h4>
+                <p>Store and access your complete medical history in one secure place.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-pills fa-2x mb-3 text-warning"></i>
+                <h4>Medication Tracking</h4>
+                <p>Never miss a dose with medication reminders and refill alerts.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-calendar-check fa-2x mb-3 text-success"></i>
+                <h4>Appointments</h4>
+                <p>Book and manage appointments with doctors effortlessly.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-file-upload fa-2x mb-3 text-primary"></i>
+                <h4>Report Upload</h4>
+                <p>Upload and share medical reports with your healthcare providers.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

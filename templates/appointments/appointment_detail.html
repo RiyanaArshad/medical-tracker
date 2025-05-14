@@ -1,0 +1,284 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}Appointment Details - Medical History & Medication Tracker{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <a href="{% url 'appointment_list' %}" class="btn btn-outline-secondary mb-2">
+            <i class="fas fa-arrow-left me-2"></i>Back to Appointments
+        </a>
+        <h1 class="mb-1">Appointment Details</h1>
+        <p class="text-muted">
+            {% if user.is_patient %}
+                With Dr. {{ appointment.doctor.get_full_name|default:appointment.doctor.username }}
+            {% else %}
+                For {{ appointment.patient.get_full_name|default:appointment.patient.username }}
+            {% endif %}
+        </p>
+    </div>
+    
+    <div>
+        {% if appointment.status == 'confirmed' %}
+            {% if user.is_patient %}
+                <a href="{% url 'appointment_cancel' appointment.id %}" class="btn btn-outline-danger" onclick="return confirm('Are you sure you want to cancel this appointment?');">
+                    <i class="fas fa-times me-2"></i>Cancel Appointment
+                </a>
+            {% endif %}
+            
+            {% if user.is_doctor %}
+                <a href="{% url 'appointment_status_update' appointment.id %}" class="btn btn-success">
+                    <i class="fas fa-check me-2"></i>Update Status
+                </a>
+            {% endif %}
+        {% elif appointment.status == 'pending' %}
+            {% if user.is_doctor %}
+                <a href="{% url 'appointment_status_update' appointment.id %}" class="btn btn-primary">
+                    <i class="fas fa-edit me-2"></i>Update Status
+                </a>
+            {% else %}
+                <a href="{% url 'appointment_cancel' appointment.id %}" class="btn btn-outline-danger" onclick="return confirm('Are you sure you want to cancel this appointment request?');">
+                    <i class="fas fa-times me-2"></i>Cancel Request
+                </a>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>Appointment Information</h5>
+                <span class="badge {% if appointment.status == 'confirmed' %}bg-success{% elif appointment.status == 'pending' %}bg-warning text-dark{% elif appointment.status == 'completed' %}bg-info{% elif appointment.status == 'cancelled' %}bg-danger{% else %}bg-secondary{% endif %} rounded-pill">
+                    {{ appointment.get_status_display }}
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p class="fw-bold mb-1">Date</p>
+                        <p>{{ appointment.appointment_date }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="fw-bold mb-1">Time</p>
+                        <p>{{ appointment.appointment_time }}</p>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <p class="fw-bold mb-1">{% if user.is_patient %}Doctor{% else %}Patient{% endif %}</p>
+                        <p>
+                            {% if user.is_patient %}
+                                {{ appointment.doctor.get_full_name|default:appointment.doctor.username }}
+                            {% else %}
+                                {{ appointment.patient.get_full_name|default:appointment.patient.username }}
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p class="fw-bold mb-1">Purpose</p>
+                        <p>{{ appointment.purpose }}</p>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <p class="fw-bold mb-1">Notes</p>
+                    <p>{{ appointment.notes|default:"No additional notes provided." }}</p>
+                </div>
+                
+                {% if appointment.status == 'completed' %}
+                <hr>
+                
+                <div class="mb-3">
+                    <p class="fw-bold mb-1">Diagnosis</p>
+                    <p>{{ appointment.diagnosis|default:"No diagnosis recorded." }}</p>
+                </div>
+                
+                <div class="mb-0">
+                    <p class="fw-bold mb-1">Recommendations</p>
+                    <p>{{ appointment.recommendations|default:"No recommendations provided." }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        {% if appointment.status == 'completed' and user.is_doctor %}
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Update Medical Record</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-3">Create or update a medical record based on this appointment.</p>
+                
+                {% if appointment.medical_record %}
+                    <a href="{% url 'medical_record_detail' appointment.medical_record.id %}" class="btn btn-primary">
+                        <i class="fas fa-eye me-2"></i>View Medical Record
+                    </a>
+                    <a href="{% url 'medical_record_update' appointment.medical_record.id %}" class="btn btn-outline-primary ms-2">
+                        <i class="fas fa-edit me-2"></i>Update Record
+                    </a>
+                {% else %}
+                    <a href="{% url 'medical_record_create' %}?appointment={{ appointment.id }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Create Medical Record
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="fas fa-prescription me-2"></i>Prescriptions</h5>
+            </div>
+            <div class="card-body">
+                {% if appointment.prescription_set.all %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Medication</th>
+                                    <th>Dosage</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for prescription in appointment.prescription_set.all %}
+                                <tr>
+                                    <td>{{ prescription.medication }}</td>
+                                    <td>{{ prescription.dosage }}</td>
+                                    <td>
+                                        <span class="badge {% if prescription.is_active %}bg-success{% else %}bg-danger{% endif %}">
+                                            {% if prescription.is_active %}Active{% else %}Inactive{% endif %}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'prescription_detail' prescription.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <a href="{% url 'prescription_create' %}?appointment={{ appointment.id }}" class="btn btn-outline-primary mt-2">
+                        <i class="fas fa-plus me-2"></i>Add New Prescription
+                    </a>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-prescription fa-3x text-muted mb-3"></i>
+                        <h5>No Prescriptions</h5>
+                        <p class="text-muted">No prescriptions have been created for this appointment.</p>
+                        
+                        <a href="{% url 'prescription_create' %}?appointment={{ appointment.id }}" class="btn btn-primary mt-2">
+                            <i class="fas fa-plus me-2"></i>Add Prescription
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">
+                    {% if user.is_patient %}
+                        <i class="fas fa-user-md me-2"></i>Doctor Information
+                    {% else %}
+                        <i class="fas fa-user me-2"></i>Patient Information
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if user.is_patient %}
+                    <h6 class="font-weight-bold">{{ appointment.doctor.get_full_name|default:appointment.doctor.username }}</h6>
+                    <p class="mb-1"><strong>Specialty:</strong> {{ appointment.doctor.doctor_profile.specialty|default:"Not specified" }}</p>
+                    <p class="mb-1"><strong>Email:</strong> {{ appointment.doctor.email }}</p>
+                    {% if appointment.doctor.doctor_profile.phone_number %}
+                        <p class="mb-3"><strong>Phone:</strong> {{ appointment.doctor.doctor_profile.phone_number }}</p>
+                    {% endif %}
+                    
+                    {% if appointment.doctor.doctor_profile.bio %}
+                        <hr>
+                        <p class="font-weight-bold mb-1">About:</p>
+                        <p class="mb-0">{{ appointment.doctor.doctor_profile.bio }}</p>
+                    {% endif %}
+                {% else %}
+                    <h6 class="font-weight-bold">{{ appointment.patient.get_full_name|default:appointment.patient.username }}</h6>
+                    <p class="mb-1"><strong>Email:</strong> {{ appointment.patient.email }}</p>
+                    {% if appointment.patient.patient_profile.phone_number %}
+                        <p class="mb-1"><strong>Phone:</strong> {{ appointment.patient.patient_profile.phone_number }}</p>
+                    {% endif %}
+                    {% if appointment.patient.patient_profile.date_of_birth %}
+                        <p class="mb-1"><strong>Date of Birth:</strong> {{ appointment.patient.patient_profile.date_of_birth }}</p>
+                    {% endif %}
+                    {% if appointment.patient.patient_profile.blood_group %}
+                        <p class="mb-3"><strong>Blood Group:</strong> {{ appointment.patient.patient_profile.blood_group }}</p>
+                    {% endif %}
+                    
+                    {% if user.is_doctor and appointment.status == 'completed' %}
+                    <hr>
+                    <div class="alert alert-info mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Medical records functionality will be available soon.
+                    </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="fas fa-history me-2"></i>Appointment History</h5>
+            </div>
+            <div class="card-body px-0 py-2">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-3 py-3">
+                        <div>
+                            <i class="fas fa-calendar-plus text-primary me-2"></i>
+                            <span>Appointment Requested</span>
+                            <p class="text-muted small mb-0">By {{ appointment.patient.get_full_name|default:appointment.patient.username }}</p>
+                        </div>
+                        <small class="text-muted">{{ appointment.date_created }}</small>
+                    </li>
+                    
+                    {% if appointment.status != 'pending' %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-3 py-3">
+                            <div>
+                                <i class="fas fa-{% if appointment.status == 'confirmed' %}check text-success{% elif appointment.status == 'cancelled' %}times text-danger{% elif appointment.status == 'completed' %}clipboard-check text-info{% else %}ban text-warning{% endif %} me-2"></i>
+                                <span>
+                                    {% if appointment.status == 'confirmed' %}
+                                        Appointment Confirmed
+                                    {% elif appointment.status == 'cancelled' %}
+                                        Appointment Cancelled
+                                    {% elif appointment.status == 'completed' %}
+                                        Appointment Completed
+                                    {% else %}
+                                        Appointment Rejected
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <small class="text-muted">{{ appointment.date_updated }}</small>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

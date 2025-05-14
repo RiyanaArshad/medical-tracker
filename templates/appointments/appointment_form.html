@@ -1,0 +1,279 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+
+{% block title %}Request Appointment - Medical History & Medication Tracker{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <a href="{% url 'appointment_list' %}" class="btn btn-outline-secondary mb-2">
+            <i class="fas fa-arrow-left me-2"></i>Back to Appointments
+        </a>
+        <h1>Request New Appointment</h1>
+        <p class="text-muted">Schedule a consultation with your healthcare provider</p>
+    </div>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">
+                    <i class="fas fa-calendar-plus me-2"></i>Appointment Request Form
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="post" id="appointmentForm" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    
+                    <div class="form-group mb-3">
+                        <label for="{{ form.specialization.id_for_label }}" class="form-label">Specialization*</label>
+                        <div class="input-group">
+                            <select name="specialization" id="{{ form.specialization.id_for_label }}" class="form-control" required>
+                                <option value="">---Select Specialization---</option>
+                                {% for value, label in form.specialization.field.choices %}
+                                    {% if value %}
+                                        <option value="{{ value }}" {% if form.specialization.value == value %}selected{% endif %}>{{ label }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                            <span class="input-group-text">
+                                <i class="fas fa-user-md"></i>
+                            </span>
+                        </div>
+                        {% if form.specialization.help_text %}
+                            <small class="form-text text-muted">{{ form.specialization.help_text }}</small>
+                        {% endif %}
+                        <div class="invalid-feedback">
+                            Please select a valid specialization.
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="{{ form.doctor.id_for_label }}" class="form-label">Doctor*</label>
+                        <div class="input-group">
+                            <select name="doctor" id="{{ form.doctor.id_for_label }}" class="form-control" required>
+                                <option value="">---Select Doctor---</option>
+                                <!-- Options will be populated by JavaScript -->
+                            </select>
+                            <span class="input-group-text">
+                                <i class="fas fa-user"></i>
+                            </span>
+                        </div>
+                        {% if form.doctor.help_text %}
+                            <small class="form-text text-muted">{{ form.doctor.help_text }}</small>
+                        {% endif %}
+                        <div class="invalid-feedback">
+                            Please select a doctor.
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.appointment_date.id_for_label }}" class="form-label">{{ form.appointment_date.label }}</label>
+                            {% if form.appointment_date.errors %}
+                                {% render_field form.appointment_date class="form-control is-invalid" type="date" %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.appointment_date.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {% render_field form.appointment_date class="form-control" type="date" %}
+                            {% endif %}
+                            {% if form.appointment_date.help_text %}
+                                <div class="form-text">{{ form.appointment_date.help_text }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.appointment_time.id_for_label }}" class="form-label">{{ form.appointment_time.label }}</label>
+                            {% if form.appointment_time.errors %}
+                                {% render_field form.appointment_time class="form-control is-invalid" %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.appointment_time.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                {% render_field form.appointment_time class="form-control" %}
+                            {% endif %}
+                            {% if form.appointment_time.help_text %}
+                                <div class="form-text">{{ form.appointment_time.help_text }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.reason.id_for_label }}" class="form-label">{{ form.reason.label }}</label>
+                        {% if form.reason.errors %}
+                            {% render_field form.reason class="form-control is-invalid" rows=3 %}
+                            <div class="invalid-feedback">
+                                {% for error in form.reason.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            {% render_field form.reason class="form-control" rows=3 %}
+                        {% endif %}
+                        {% if form.reason.help_text %}
+                            <div class="form-text">{{ form.reason.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{% url 'appointment_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-2"></i>Submit Request
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Appointment Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info mb-3">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Your appointment request will be reviewed by the doctor before confirmation.</strong>
+                </div>
+                
+                <p class="mb-3">Please provide the following information to schedule your appointment:</p>
+                
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2">
+                        <i class="fas fa-user-md text-primary me-2"></i>
+                        <strong>Specialization:</strong> Select the type of doctor you need
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-user-md text-primary me-2"></i>
+                        <strong>Doctor:</strong> Select the healthcare provider you wish to see
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-stethoscope text-primary me-2"></i>
+                        <strong>Reason:</strong> Describe the reason for your visit
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-calendar-alt text-primary me-2"></i>
+                        <strong>Date:</strong> Choose your preferred appointment date
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-clock text-primary me-2"></i>
+                        <strong>Time:</strong> Select your preferred appointment time
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Appointment Tips</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        Schedule at least 24 hours in advance when possible
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        Be specific about your symptoms in the notes
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        Mention any recent medical tests or treatments
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        List current medications you're taking
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                        Arrive 15 minutes early for your appointment
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const specializationSelect = document.getElementById('{{ form.specialization.id_for_label }}');
+        const doctorSelect = document.getElementById('{{ form.doctor.id_for_label }}');
+
+        async function loadDoctors(specialization) {
+            doctorSelect.innerHTML = '<option value="">---Select Doctor---</option>';
+            doctorSelect.disabled = true;
+
+            if (specialization) {
+                doctorSelect.innerHTML = '<option value="">Loading doctors...</option>';
+                
+                try {
+                    const response = await fetch(`/appointments/get-doctors/${encodeURIComponent(specialization)}/`);
+                    if (!response.ok) throw new Error(`Failed to load doctors: ${response.status}`);
+                    
+                    const data = await response.json();
+                    doctorSelect.innerHTML = '<option value="">---Select Doctor---</option>';
+                    
+                    data.doctors.forEach(doctor => {
+                        const option = new Option(
+                            `${doctor.name} (${doctor.specialization})`, 
+                            doctor.id
+                        );
+                        doctorSelect.add(option);
+                    });
+
+                    // Handle form validation persistence
+                    const selectedDoctorId = "{{ form.doctor.value|default:'' }}";
+                    if (selectedDoctorId) {
+                        doctorSelect.value = selectedDoctorId;
+                        if (!doctorSelect.value) {
+                            console.warn('Previously selected doctor not found in results');
+                        }
+                    }
+                    
+                    doctorSelect.disabled = false;
+                } catch (error) {
+                    console.error('Error:', error);
+                    doctorSelect.innerHTML = '<option value="">Error loading doctors</option>';
+                    doctorSelect.disabled = false;
+                }
+            }
+        }
+
+        // Initial load handling
+        if (specializationSelect.value) {
+            loadDoctors(specializationSelect.value);
+        } else {
+            doctorSelect.innerHTML = '<option value="">---Select Specialization First---</option>';
+        }
+
+        specializationSelect.addEventListener('change', function() {
+            doctorSelect.value = '';
+            if (this.value) {
+                loadDoctors(this.value);
+            } else {
+                doctorSelect.innerHTML = '<option value="">---Select Specialization First---</option>';
+                doctorSelect.disabled = true;
+            }
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %} 

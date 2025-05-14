@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block title %}Register - Choose Account Type - Medical History & Medication Tracker{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center mb-4">
+        <div class="col-md-8 text-center">
+            <h1 class="display-4 mb-4">Create an Account</h1>
+            <p class="lead">Choose the type of account you want to create</p>
+        </div>
+    </div>
+    
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="row">
+                <!-- Patient Registration Card -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <h3 class="mb-0"><i class="fas fa-user me-2"></i>Patient</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center mb-4">
+                                <i class="fas fa-user-circle fa-5x text-primary mb-3"></i>
+                                <h4>Register as a Patient</h4>
+                                <p class="text-muted">Create an account to track your medical records, appointments, and prescriptions</p>
+                            </div>
+                            
+                            <ul class="list-group list-group-flush mb-4">
+                                <li class="list-group-item">
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                    Schedule appointments with doctors
+                                </li>
+                                <li class="list-group-item">
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                    Track your prescriptions and medications
+                                </li>
+                                <li class="list-group-item">
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                    Access your medical records anytime
+                                </li>
+                                <li class="list-group-item">
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                    Receive medication reminders
+                                </li>
+                            </ul>
+                            
+                            <div class="text-center">
+                                <a href="{% url 'register_patient' %}" class="btn btn-primary btn-lg">Register as Patient</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Doctor Registration Card -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-header bg-success text-white">
+                            <h3 class="mb-0"><i class="fas fa-user-md me-2"></i>Doctor</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center mb-4">
+                                <i class="fas fa-user-md fa-5x text-success mb-3"></i>
+                                <h4>Register as a Doctor</h4>
+                                <p class="text-muted">Create an account to manage patients, appointments, and medical records</p>
+                            </div>
+                            
+                            <ul class="list-group list-group-flush mb-4">
+                                <li class="list-group-item">
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                    Manage patient appointments
+                                </li>
+                                <li class="list-group-item">
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                    Create and update medical records
+                                </li>
+                                <li class="list-group-item">
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                    Prescribe medications to patients
+                                </li>
+                                <li class="list-group-item">
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                    Track patient medical history
+                                </li>
+                            </ul>
+                            
+                            <div class="text-center">
+                                <a href="{% url 'register_doctor' %}" class="btn btn-success btn-lg">Register as Doctor</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-3">
+                <p>Already have an account? <a href="{% url 'login' %}" class="text-primary">Login here</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
